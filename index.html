@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+    <title>Socket.IO chat</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font: 13px Helvetica, Arial; }
+        .myform { background: #000; color: #fff; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+        .name,.recipient {width:50%;float:left;}
+        .message input{ border: 0; padding: 10px; width: 88%; margin-right: .5%; }
+        .name input,.recipient input { border: 0; padding: 10px; width: 98%; margin-right: .5%; }
+        .message button { width: 10%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+        #messages { list-style-type: none; margin: 0; padding: 0; }
+        #messages li { padding: 5px 10px; }
+        #messages li:nth-child(odd) { background: #eee; }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
+</head>
+<body ng-app="myChat">
+<span ng-controller="ChatCtrl">
+    <ul id="messages">
+        <li ng-repeat="message in messages">{{message}}</li>
+    </ul>
+    <div class="myform">
+        <div class="name">
+            <span>Name:</span>
+            <input type="text" ng-model="sender">
+        </div>
+        <div class="recipient">
+            <span>Recipient:</span>
+            <input type="text" ng-model="recipient">
+        </div>
+
+        <div class="message">
+            <span>Message:</span>
+            <input type="text" ng-model="message">
+            <button ng-click="send()">Send</button>
+        </div>
+    </div>
+
+</span>
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<script>
+    (function () {
+        'use strict';
+
+        angular.module('myChat', []).controller('ChatCtrl', ChatCtrl);
+
+        function ChatCtrl($scope) {
+
+            var socket = io();
+
+            $scope.sender = "";
+            $scope.recipient = "";
+            $scope.message = "";
+            $scope.messages = [];
+
+            $scope.$watch('recipient',function () {
+                socket.on('chat message ' + $scope.sender, function (msg) {
+                    $scope.$apply($scope.messages.push(msg.sender + ": " + msg.text));
+                });
+            });
+
+            $scope.send = function () {
+                socket.emit('chat message', {text: $scope.message, sender: $scope.sender, recipient: $scope.recipient});
+                $scope.messages.push("You: " + $scope.message);
+                $scope.message = "";
+            };
+
+        }
+
+
+    })();
+</script>
+</body>
+</html>
+
